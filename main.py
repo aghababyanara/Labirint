@@ -9,13 +9,13 @@ class Labirint(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("ԼԱԲԻՐԻՆՏ")
+        self.setWindowTitle("LABIRINT")
         self.showFullScreen()
 
         screen = QApplication.primaryScreen()
         self.screen_size = screen.size()
 
-        self.cell_size = 20
+        self.cell_size = 15
         self.grid_width = self.screen_size.width() // self.cell_size
         self.grid_height = self.screen_size.height() // self.cell_size
 
@@ -23,7 +23,8 @@ class Labirint(QMainWindow):
         self.grid_height -= self.grid_height % 2
 
         self.layout = QVBoxLayout()
-        self.reset_button = QPushButton("ՍԿՍԵԼ ՆՈՐԻՑ")
+        self.reset_button = QPushButton("START AGAIN")
+        self.reset_button.setStyleSheet("background-color: #4CAF50;")
         self.reset_button.clicked.connect(self.reset_game)
         self.reset_button.setVisible(False)
         self.layout.addWidget(self.reset_button)
@@ -31,6 +32,12 @@ class Labirint(QMainWindow):
         container = QWidget()
         container.setLayout(self.layout)
         self.setMenuWidget(container)
+
+        self.time_timer = QTimer()
+        self.time_timer.timeout.connect(self.update_time)
+        self.time_timer.start(1000)
+
+        self.elapsed_time = 0
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.move_player)
@@ -56,6 +63,10 @@ class Labirint(QMainWindow):
         self.speed_multiplier = self.initial_speed
         self.timer.start(30)
         self.reset_button.setVisible(False)
+
+    def update_time(self):
+        self.elapsed_time += 1
+        self.update()
 
     def generate_labirint(self, width, height):
         maze = [[1 for _ in range(width)] for _ in range(height)]
@@ -131,9 +142,9 @@ class Labirint(QMainWindow):
             target_x, target_y = self.path[self.current_step + 1]
 
             if (target_x, target_y) in self.cacti:
-                print("ՀԱՆԴԻՊԵՑԻ ԿԱԿՏՈՒՍԻ")
+                print("MEET CACTI")
                 self.slowdown_timer = 30
-                self.speed_multiplier = 0.9
+                self.speed_multiplier = 0.65
 
             direction_x = (target_x * self.cell_size - self.current_pos[0]) * self.speed_multiplier
             direction_y = (target_y * self.cell_size - self.current_pos[1]) * self.speed_multiplier
@@ -150,7 +161,7 @@ class Labirint(QMainWindow):
 
             self.update()
         else:
-            print("ԼԱԲԻՐԻՆՏԸ ԼՈՒԾՎԱԾ Է")
+            print("LABIRINT IS SOLVED")
             self.timer.stop()
             self.reset_button.setVisible(True)
 
@@ -187,6 +198,12 @@ class Labirint(QMainWindow):
         )
         qp.setBrush(QColor(255, 0, 0))
         qp.drawRect(exit_rect)
+
+        font = qp.font()
+        font.setPointSize(20)
+        qp.setFont(font)
+        qp.setPen(QPen(Qt.GlobalColor.red))
+        qp.drawText(10, 30, f"Time: {self.elapsed_time} sec")
 
         qp.end()
 
